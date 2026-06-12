@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>TSP Solver — Route Optimizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🚚</div>
+      <div>
+        <h1>RouteOptimizer <span class="version">v1.0</span></h1>
+        <p class="subtitle">Traveling Salesman Problem · Algorithm Visualizer</p>
+      </div>
+    </div>
+    <nav>
+      <a href="/" class="nav-link active">Solver</a>
+      <a href="/theory" class="nav-link">Theory</a>
+    </nav>
+    <div class="algo-pills">
+      <span class="pill nn">Nearest Neighbor</span>
+      <span class="pill mst">MST 2-Approx</span>
+      <span class="pill opt">2-opt</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ── LEFT PANEL ── -->
+  <aside class="sidebar">
+
+    <div class="card">
+      <div class="card-title">🗺 Map Setup</div>
+      <p class="hint">Click the canvas to place cities, or auto-generate.</p>
+      <div class="field-row">
+        <label>City count</label>
+        <input type="number" id="cityCount" value="20" min="5" max="50"/>
+      </div>
+      <button class="btn primary full" id="btnRandom">⚡ Generate Random Cities</button>
+      <button class="btn ghost full" id="btnClear">🗑 Clear All</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧮 Algorithm</div>
+      <div class="algo-group">
+        <label class="radio-opt active" id="lbl-nn">
+          <input type="radio" name="algo" value="nearest_neighbor" checked/>
+          <div class="ro-content">
+            <span class="ro-dot nn"></span>
+            <div>
+              <div class="ro-name">Nearest Neighbor</div>
+              <div class="ro-desc">Greedy — fast but suboptimal</div>
+            </div>
+          </div>
+        </label>
+        <label class="radio-opt" id="lbl-mst">
+          <input type="radio" name="algo" value="mst"/>
+          <div class="ro-content">
+            <span class="ro-dot mst"></span>
+            <div>
+              <div class="ro-name">MST 2-Approximation</div>
+              <div class="ro-desc">Guaranteed ≤ 2× optimal</div>
+            </div>
+          </div>
+        </label>
+        <label class="radio-opt" id="lbl-opt">
+          <input type="radio" name="algo" value="two_opt"/>
+          <div class="ro-content">
+            <span class="ro-dot opt"></span>
+            <div>
+              <div class="ro-name">2-opt Local Search</div>
+              <div class="ro-desc">Iterative improvement</div>
+            </div>
+          </div>
+        </label>
+      </div>
+      <button class="btn accent full" id="btnSolve">🚀 Solve All Three</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">▶ Animation</div>
+      <div class="speed-row">
+        <span>Speed</span>
+        <input type="range" id="speedSlider" min="50" max="750" value="350"/>
+        <span id="speedVal">Mid</span>
+      </div>
+      <div class="pb-btns">
+        <button class="btn icon" id="btnStepBack" disabled title="Step Back">⏮</button>
+        <button class="btn icon accent-btn" id="btnPlayPause" disabled>▶</button>
+        <button class="btn icon" id="btnStepFwd" disabled title="Step Forward">⏭</button>
+        <button class="btn icon" id="btnReset" disabled title="Reset">⏹</button>
+      </div>
+      <div class="progress-row">
+        <div class="pbar"><div class="pfill" id="pfill"></div></div>
+        <span id="stepLbl" class="step-lbl">—</span>
+      </div>
+      <div class="action-log" id="actionLog">—</div>
+    </div>
+
+    <div class="card results-card" id="resultsCard" style="display:none">
+      <div class="card-title">📊 Results</div>
+      <div class="result-item" id="ri-nn">
+        <span class="r-dot nn"></span>
+        <span class="r-name">Nearest Neighbor</span>
+        <span class="r-dist" id="d-nn">—</span>
+      </div>
+      <div class="result-item" id="ri-mst">
+        <span class="r-dot mst"></span>
+        <span class="r-name">MST 2-Approx</span>
+        <span class="r-dist" id="d-mst">—</span>
+      </div>
+      <div class="result-item" id="ri-opt">
+        <span class="r-dot opt"></span>
+        <span class="r-name">2-opt</span>
+        <span class="r-dist" id="d-opt">—</span>
+      </div>
+      <div class="improvement-bar" id="improvementBar" style="display:none">
+        <div class="ib-label">2-opt improvement over NN</div>
+        <div class="ib-track"><div class="ib-fill" id="ibFill"></div></div>
+        <div class="ib-pct" id="ibPct"></div>
+      </div>
+      <div class="guarantee-box">
+        🔒 MST guarantee: tour ≤ <strong>2 × OPT</strong> for metric TSP
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── CANVAS AREA ── -->
+  <div class="canvas-area">
+    <div class="canvas-toolbar">
+      <span id="statusMsg" class="status-msg">Click the map to place cities</span>
+      <div class="view-tabs">
+        <button class="vtab active" data-view="tour">Tour</button>
+        <button class="vtab" data-view="mst">MST Overlay</button>
+        <button class="vtab" data-view="compare">Compare All</button>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="mapCanvas" width="800" height="500"></canvas>
+      <div id="cityTooltip" class="city-tooltip"></div>
+    </div>
+
+    <div class="np-banner">
+      <span class="np-tag">NP-Complete</span>
+      <span>With <strong id="nCities">n</strong> cities, brute-force checks
+        <strong id="nPerms">—</strong> routes.
+        Approximation algorithms give us provably-good solutions in polynomial time.
+      </span>
+      <a href="/theory" class="np-link">Learn why →</a>
+    </div>
+  </div>
+</main>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>

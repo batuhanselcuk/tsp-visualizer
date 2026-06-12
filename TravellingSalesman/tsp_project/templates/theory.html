@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Theory — TSP Solver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+  <link rel="stylesheet" href="/static/css/theory.css"/>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🚚</div>
+      <div>
+        <h1>RouteOptimizer <span class="version">v1.0</span></h1>
+        <p class="subtitle">Traveling Salesman Problem · Algorithm Visualizer</p>
+      </div>
+    </div>
+    <nav>
+      <a href="/" class="nav-link">Solver</a>
+      <a href="/theory" class="nav-link active">Theory</a>
+    </nav>
+  </div>
+</header>
+
+<div class="theory-page">
+
+  <div class="theory-hero">
+    <div class="th-inner">
+      <div class="th-tag">Algorithm Analysis — Student 22</div>
+      <h1>The Traveling Salesman Problem</h1>
+      <p>Why delivering to 50 cities is one of the hardest problems in computer science — and how approximation algorithms save us.</p>
+      <div class="th-meta">
+        <span>📄 Rosenkrantz et al., 1977 · SIAM Journal on Computing</span>
+        <span>⏱ ~10 min read</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="theory-body">
+
+    <!-- ── SECTION 1: Problem Definition ── -->
+    <section class="t-section">
+      <div class="t-eyebrow">01 — Problem Definition</div>
+      <h2>What is TSP?</h2>
+      <p>Given a set of <em>n</em> cities and the distances between every pair, find the <strong>shortest possible route</strong> that visits each city exactly once and returns to the origin.</p>
+      <p>Simple to state. Deceptively hard to solve.</p>
+
+      <div class="info-cards">
+        <div class="info-card">
+          <div class="ic-icon">📦</div>
+          <div class="ic-title">Delivery Routing</div>
+          <div class="ic-text">Amazon optimizes routes for thousands of packages daily. Even a 1% improvement saves millions.</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">🧬</div>
+          <div class="ic-title">DNA Sequencing</div>
+          <div class="ic-text">Gene sequencing problems map directly to TSP — minimizing the number of chemical reactions needed.</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">🔬</div>
+          <div class="ic-title">Circuit Board Drilling</div>
+          <div class="ic-text">Manufacturing PCBs: minimize drill head travel distance across thousands of holes.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: NP-Completeness ── -->
+    <section class="t-section">
+      <div class="t-eyebrow">02 — Complexity Theory</div>
+      <h2>Why Exact Solutions Are Impossible (at Scale)</h2>
+      <p>TSP belongs to a class of problems called <strong>NP-Complete</strong>. No polynomial-time algorithm is known — and most computer scientists believe none exists.</p>
+
+      <div class="complexity-table">
+        <div class="ct-header">
+          <span>Cities (n)</span>
+          <span>Permutations to Check</span>
+          <span>Time @ 10⁹ ops/sec</span>
+          <span>Verdict</span>
+        </div>
+        <div class="ct-row">
+          <span class="ct-n">10</span>
+          <span class="ct-p">181,440</span>
+          <span class="ct-t">0.18 ms</span>
+          <span class="ct-v ok">✓ Feasible</span>
+        </div>
+        <div class="ct-row">
+          <span class="ct-n">20</span>
+          <span class="ct-p">60,822,550,204,416,000</span>
+          <span class="ct-t">~2 years</span>
+          <span class="ct-v warn">⚠ Very slow</span>
+        </div>
+        <div class="ct-row">
+          <span class="ct-n">50</span>
+          <span class="ct-p">3 × 10⁶²</span>
+          <span class="ct-t">∞ (longer than universe)</span>
+          <span class="ct-v bad">✗ Impossible</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-icon">💡</div>
+        <div>
+          <strong>P vs NP</strong> — The million-dollar question. If P = NP were proven, TSP (and hundreds of other problems in cryptography, logistics, and AI) could be solved efficiently. Almost all researchers believe P ≠ NP.
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: Algorithms ── -->
+    <section class="t-section">
+      <div class="t-eyebrow">03 — Our Algorithms</div>
+      <h2>Three Approaches, Three Trade-offs</h2>
+
+      <div class="algo-detail nn-detail">
+        <div class="ad-header">
+          <span class="ad-dot nn"></span>
+          <h3>Algorithm 1 — Nearest Neighbor (Greedy)</h3>
+          <span class="ad-complexity">O(n²)</span>
+        </div>
+        <p><strong>Strategy:</strong> Always go to the closest unvisited city.</p>
+        <p><strong>Why it fails:</strong> The greedy choice is locally optimal but globally disastrous. By always picking the nearest city, the algorithm can "paint itself into a corner" — forcing a very long jump at the end to close the tour.</p>
+        <div class="pseudo-block">
+          <div class="pb-title">Pseudocode</div>
+<pre>tour ← [start_city]
+unvisited ← all other cities
+
+while unvisited is not empty:
+    current ← last city in tour
+    nearest ← city in unvisited with min dist(current, city)
+    tour.append(nearest)
+    unvisited.remove(nearest)
+
+tour.append(start_city)  // close loop</pre>
+        </div>
+        <div class="verdict-row">
+          <span class="v-badge bad">No quality guarantee</span>
+          <span class="v-badge ok">O(n²) time</span>
+          <span class="v-badge ok">O(n) space</span>
+        </div>
+      </div>
+
+      <div class="algo-detail mst-detail">
+        <div class="ad-header">
+          <span class="ad-dot mst"></span>
+          <h3>Algorithm 2 — MST 2-Approximation</h3>
+          <span class="ad-complexity">O(n² log n)</span>
+        </div>
+        <p><strong>Strategy:</strong> Build a Minimum Spanning Tree, then follow it with DFS.</p>
+        <p><strong>The key theorem:</strong> For any metric TSP instance, the MST weight is a lower bound on the optimal tour. A DFS traversal of the MST visits every edge at most twice, giving a tour of cost ≤ 2 × MST ≤ 2 × OPT.</p>
+        <div class="proof-block">
+          <div class="pb-title">Proof of 2× Guarantee</div>
+          <div class="proof-steps">
+            <div class="ps">① Let OPT = length of the optimal tour.</div>
+            <div class="ps">② Removing any edge from OPT gives a spanning tree. So: <code>MST_cost ≤ OPT</code></div>
+            <div class="ps">③ A full DFS walk of the MST traverses each edge exactly twice: <code>DFS_walk = 2 × MST_cost</code></div>
+            <div class="ps">④ By the <strong>triangle inequality</strong> (metric TSP), shortcutting repeated visits never increases cost.</div>
+            <div class="ps result">∴ <code>tour_cost ≤ 2 × MST_cost ≤ 2 × OPT</code> &nbsp;■</div>
+          </div>
+        </div>
+        <div class="pseudo-block">
+          <div class="pb-title">Pseudocode</div>
+<pre>T ← Prim_MST(cities)         // O(n²)
+tour ← DFS_preorder(T, root=0) // O(n)
+tour.append(tour[0])           // close loop</pre>
+        </div>
+        <div class="verdict-row">
+          <span class="v-badge great">≤ 2× optimal guaranteed</span>
+          <span class="v-badge ok">O(n² log n)</span>
+        </div>
+      </div>
+
+      <div class="algo-detail opt-detail">
+        <div class="ad-header">
+          <span class="ad-dot opt"></span>
+          <h3>Algorithm 3 — 2-opt Local Search</h3>
+          <span class="ad-complexity">O(n² · k)</span>
+        </div>
+        <p><strong>Strategy:</strong> Repeatedly find two edges that "cross" and uncross them.</p>
+        <p><strong>Intuition:</strong> If edges (A→B) and (C→D) cross each other on the map, replacing them with (A→C) and (B→D) always shortens the tour (triangle inequality). Keep swapping until no improvement is possible.</p>
+        <div class="pseudo-block">
+          <div class="pb-title">Pseudocode</div>
+<pre>tour ← nearest_neighbor_tour()
+improved ← true
+
+while improved:
+    improved ← false
+    for i in range(1, n-1):
+        for j in range(i+1, n):
+            if dist(tour[i-1], tour[i]) + dist(tour[j], tour[j+1])
+               > dist(tour[i-1], tour[j]) + dist(tour[i], tour[j+1]):
+                  reverse(tour[i..j])    // uncross edges
+                  improved ← true</pre>
+        </div>
+        <div class="verdict-row">
+          <span class="v-badge warn">Local optimum (no global guarantee)</span>
+          <span class="v-badge ok">O(n² · iterations)</span>
+          <span class="v-badge great">Best practical results</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 4: Comparison ── -->
+    <section class="t-section">
+      <div class="t-eyebrow">04 — Comparison</div>
+      <h2>Algorithm Summary</h2>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Time Complexity</th>
+            <th>Quality Guarantee</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="r-dot nn"></span> Nearest Neighbor</td>
+            <td><code>O(n²)</code></td>
+            <td class="bad-cell">None</td>
+            <td>Quick baseline</td>
+          </tr>
+          <tr>
+            <td><span class="r-dot mst"></span> MST 2-Approx</td>
+            <td><code>O(n² log n)</code></td>
+            <td class="good-cell">≤ 2 × OPT</td>
+            <td>Provable guarantee</td>
+          </tr>
+          <tr>
+            <td><span class="r-dot opt"></span> 2-opt</td>
+            <td><code>O(n² × k)</code></td>
+            <td class="ok-cell">Local optimum</td>
+            <td>Best practical quality</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── SECTION 5: Paper Reference ── -->
+    <section class="t-section">
+      <div class="t-eyebrow">05 — Academic Reference</div>
+      <h2>Source Paper</h2>
+      <div class="paper-card">
+        <div class="pc-icon">📄</div>
+        <div>
+          <div class="pc-title">An Analysis of Several Heuristics for the Traveling Salesman Problem</div>
+          <div class="pc-authors">Rosenkrantz, D. J., Stearns, R. E., & Lewis, P. M. (1977)</div>
+          <div class="pc-journal">SIAM Journal on Computing, 6(3), 563–581</div>
+          <div class="pc-abstract">This paper provides rigorous worst-case analysis of greedy heuristics for TSP, proving the 2× approximation bound for the MST heuristic and demonstrating why nearest-neighbor can be arbitrarily bad in the worst case.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="back-btn-wrap">
+      <a href="/" class="btn primary">← Back to Solver</a>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
